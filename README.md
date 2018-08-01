@@ -23,13 +23,13 @@ The GitHub repo itself includes the following additional components
 
 ## Pre-Requisites
 To walk through all labs of this tutorial you will need
-1. An AWS Account: Dont have one? Register via http://aws.amazon.com
-2. A Dynatrace SaaS Account: Dont have one? Register via http://bit.ly/dtsaastrial
+1. An AWS Account: Don't have one? Register via http://aws.amazon.com
+2. A Dynatrace SaaS Account: Don't have one? Register via http://bit.ly/dtsaastrial
 3. Clone or download this GitHub repo to your local machine
 4. In AWS you need an EC2 KeyPair in your default region
 5. In Dynatrace you need to create an [API Token](https://www.dynatrace.com/support/help/dynatrace-api/authentication/how-do-i-set-up-authentication-to-use-the-api/)
 6. In Dynatrace setup [AWS CloudWatch Monitoring](https://www.dynatrace.com/support/help/cloud-platforms/amazon-web-services/how-do-i-start-amazon-web-services-monitoring/)
-7. FORK or IMPORT https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service.git into your own GitHub proejct if you want to walk through Labs 3 and beyond! These require some code modifications that we will commit back to GitHub
+7. FORK or IMPORT https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service.git into your own GitHub project if you want to walk through Labs 3 and beyond! These require some code modifications that we will commit back to GitHub
 
 **Best Practice:** For most of the labs we need to provide the following input values:
 1. Dynatrace SaaS Url
@@ -48,11 +48,12 @@ Make sure you have these values at hand, e.g: copy them into a text file so they
 4. Select "Yes" on "Step 0: Download dynatrace-monitoring-as-service Github" (keep the rest NO)
 5. If you have created your own GitHub repo then provide the link - otherwise go with the default
 6. Fill in the 3 Dynatrace values even though not needed for this workshop
-7. Walk until the end of the wizard - make sure to select "I acknolwedge ..." on the last step before creating the stack!
+7. Walk until the end of the wizard - make sure to select "I acknowledge ..." on the last step before creating the stack!
 
 **Step 2: Launch app**
 1. SSH into machine
-2. ./run_frontend2builds_clustered.sh
+2. cd dynatrace-monitoring-as-service
+3. ./run_frontend2builds_clustered.sh
 
 This will run one instance of the backend-service, 4 instances of the frontend-service (2 running Build #1, 2 running Build #2) as well as the frontend NGINX-based load balancer. 
 
@@ -71,7 +72,7 @@ Before launching frontend, backend or frontend-loadbalancer have a look at the r
 We have a distributed application that we can access. 
 As for  monitoring: The only level of monitoring you have in the moment is through the Dynatrace AWS CloudWatch integration which gives you basic infrastructure metrics for your EC2 instance!
 
-## Lab 2: Enable FullStack Monitoring throuhg OneAgent rollout
+## Lab 2: Enable FullStack Monitoring through OneAgent rollout
 In this lab we learn how to automate the installation of the Dynatrace OneAgent, how to pass in additional meta data about the host and how OneAgent automatically monitors all our processes, containers, services, applications and end-users!
 We also learn about tagging and how to organize your entities. We highly recommend to read [Best practices on organize monitored entities](https://www.dynatrace.com/support/help/organize-monitored-entities/)
 
@@ -88,16 +89,15 @@ We also learn about tagging and how to organize your entities. We highly recomme
 **Step 4: Execute some load**
 We have a JMeter script ready that executes constant load against the app. Here are the steps to kick it off:
 1. cd jmeter-as-container
-2. ./build_docker.sh
-3. ./quicklaunch.sh <YOURPUBLICDNS>, e.g: ./quicklaunch.sh ec2-11-222-33-44.compute-1.amazonaws.com
+2. ./quicklaunch.sh <YOURPUBLICDNS>, e.g: ./quicklaunch.sh ec2-11-222-33-44.compute-1.amazonaws.com
 
-This executes the script scripts/SampleNodeJsServiceTest.jmx. It simulates 10 concurrent users and the test will run until you call "./stop.test.sh". Once stopped you get the JMeter Result Dashboard in the local results.zip!
+This executes the script scripts/SampleNodeJsServiceTest.jmx. It simulates 10 concurrent users and the test will run until you call "./stop_test.sh". Once stopped you get the JMeter Result Dashboard in the local results.zip!
 
 **Step 5: Explore automated monitoring result and how it works!**
 
 Here are a couple of things that happened "automagically" due to the auto installation of OneAgent through this part of the CloudFormation Script.
 
-*How to install the OneAgent? How to pass hostautotag.conf?*
+*How to install the OneAgent? How to pass hostautotag.conf? How to create hostgroup?*
 Lets first look at the script so you can replicate this in your own scripts (CloudFormation, Terraform, Saltstack ...)
 ```json
 "wget --no-check-certificate -O Dynatrace-OneAgent-Linux.sh \"",
@@ -108,29 +108,42 @@ Lets first look at the script so you can replicate this in your own scripts (Clo
 "echo 'Ready to install & configure tags for OneAgent:'\n",
 "mkdir -p /var/lib/dynatrace/oneagent/agent/config\n",
 "cd /var/lib/dynatrace/oneagent/agent/config\n",
-"echo \"MaaSHost StackName=",
+"echo \"DTMaaSHost StackName=",
 {
     "Ref" : "AWS::StackName"
 },
-" ",
+" Environment=",
 {
-    "Ref" : "DynatraceCustomHostTags"
+    "Ref" : "Environment"
 },
 "\" > hostautotag.conf\n",
 "cd /\n",
-"sudo /bin/sh Dynatrace-OneAgent-Linux.sh APP_LOG_CONTENT_ACCESS=1\n"
+"sudo /bin/sh Dynatrace-OneAgent-Linux.sh HOST_GROUP=",
+{
+    "Ref" : "Environment"
+},
+" APP_LOG_CONTENT_ACCESS=1\n",
+"echo \"Environment=",
+{
+    "Ref" : "Environment"
+},
+" ProductTeam=",
+{
+    "Ref" : "ProductTeam"
+},
+"\" > hostcustomproperties.conf\n",
 ```
 
-This will result in an automated monitored host that should look simliar to this - including all tags from hostautotag.conf and all AWS Tags that came in through the AWS CloudWatch Integration:
+This will result in an automated monitored host that should look simliar to this - including all tags from hostautotag.conf & AWS Tags (through AWS CloudWatch Integration), custom properties from hostcustomproperties.conf and that runs in its own hostgroup:
 ![](./images/lab2_hostoverview_w_tags.jpg)
 
 *How were the individual processes detected? How about Process Groups?*
-By default Dynatrace groups similiar processes into a [Process Group](https://www.dynatrace.com/support/help/infrastructure/processes/what-are-processes-groups/). In our case we will get a Process Group (PG) for each individual Docker Image, e.g: frontend-app, backend-app, frontend-loadbalancer as this is the default behavior!
+By default Dynatrace groups similar processes into a [Process Group](https://www.dynatrace.com/support/help/infrastructure/processes/what-are-processes-groups/). In our case we will get a Process Group (PG) for each individual Docker Image, e.g: frontend-app, backend-app, frontend-loadbalancer as this is the default behavior!
 
 ![](./images/lab2_hostoverview_processes.jpg)
 
 If we run multiple process or docker instances of the same process or container image, Dynatrace will group them all into a single Process Group Instance (PGI). In our case that means that we will see ONE PGI for frontend-app, ONE for backend-app and ONE for frontend-loadbalancer.
-The fact that we have multiple instances of the same container on the same host doesnt give us individual PGIs. That is the default behavior! We have ways to change that behavior through Process Group Detection rules or by using some of the DT_ environment variables. We will use this later one to get different PGIs for the different simulated builds of our frontend service, e.g: PGI for Build 1, Build 2, ... - for now we go with the default!
+The fact that we have multiple instances of the same container on the same host doesn't give us individual PGIs. That is the default behavior! We have ways to change that behavior through Process Group Detection rules or by using some of the DT_ environment variables. We will use this later one to get different PGIs for the different simulated builds of our frontend service, e.g: PGI for Build 1, Build 2, ... - for now we go with the default!
 
 **Lab Lessons Learned**
 1. Deploying OneAgent will automatically enable FullStack Monitoring
@@ -152,7 +165,7 @@ It depends on your environment but here are some ideas, e.g: Build Number, Versi
 **Step 1: Pass meta data via custom environment variables**
 1. Edit frontend-app/run_docker.sh
 2. Change the comments to use the launch process labeled **Step 1** (make sure the other lines are commented)
-3. Lets restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
+3. Let's restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
 
 Looking at our Process Groups now shows us the additional Meta Data and the Automated Tags!
 
@@ -161,7 +174,7 @@ Looking at our Process Groups now shows us the additional Meta Data and the Auto
 **Step 2: Influence PGI Detection to detect each Build as separate PGI**
 1. Edit frontend-app/run_docker.sh
 2. Change the comments to use the launch process labeled **Step 2** (make sure the other lines are commented)
-3. Lets restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
+3. Let's restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
 
 The difference with this launch process is that we pass the BUILD_NUMBER as DT_NODE_ID. This changes the default Process Group Instance detection mechanism and every docker instance, even if it comes from the same docker image, will be split into its own PGI.
 **Note: Kubernetes, OpenShift, CloudFoundry, ...:** For these platforms the OneAgent automatically detects containers running in different pods, spaces or projects. There should be no need to leverage DT_NODE_ID to separate your container instances.
@@ -173,7 +186,7 @@ The difference with this launch process is that we pass the BUILD_NUMBER as DT_N
 2. How to influence process group and process group instance detection
 
 ## Lab 4: Tagging of Services
-In this lab we learn how to automatically apply tags on service level. This allows you to query service-level metrics (Respone Time, Failure Rate, Throughput, ...) automatically based on meta data that you have passed during a deployment, e.g: Service-Type (Frontend, Backend, ...), Deployment Stage (Dev, Test, Staging, Prod ...)
+In this lab we learn how to automatically apply tags on service level. This allows you to query service-level metrics (Response Time, Failure Rate, Throughput, ...) automatically based on meta data that you have passed during a deployment, e.g: Service-Type (Frontend, Backend, ...), Deployment Stage (Dev, Test, Staging, Prod ...)
 
 In order to tag services we leverage Automated Service Tag Rules. In our lab we want Dynatrace create a new Service-level TAG with the name "SERVICE_TYPE". It should only apply the tag IF the underlying Process Group has the custom meta data property "SERVICE_TYPE". If that is the case we also want to take that value and apply it as the tag value for "Service_Type". 
 
@@ -220,11 +233,11 @@ The Dynatrace CLI also implements a dtcli evt push option as well as an option t
 
 ![](./images/pushhostevent.jpg)
 
-*What just happened?* The Dynatrace CLI was called with the monspec and the pipelineinfo.json as parameter. One additional parameter was MaaSHost/Lab2. This told the CLI to lookup this configuration section in monspec.json and then push a custom deployment event to those Dynatrace HOST entities that have that particular tag (Environment=MaaSHost) on it. Such an event in Dynatrace can have an arbritrary list of name/value pair properties. The CLI automatically pushes some of the information from monspec, e.g: Owner as well as some information in the pipelineinfo.json file to Dynatrace!
+*What just happened?* The Dynatrace CLI was called with the monspec and the pipelineinfo.json as parameter. One additional parameter was MaaSHost/Lab2. This told the CLI to lookup this configuration section in monspec.json and then push a custom deployment event to those Dynatrace HOST entities that have that particular tag (Environment=MaaSHost) on it. Such an event in Dynatrace can have an arbitrary list of name/value pair properties. The CLI automatically pushes some of the information from monspec, e.g: Owner as well as some information in the pipelineinfo.json file to Dynatrace!
 
 **Step 2: Push service deployment information**
 1. cat ./monspec/monspec.json
-2. Explore the entry "FrontendApp". You will see similiar data as for our host. But now its a SERVICE and we use our SERVICE_TYPE tag to identify it
+2. Explore the entry "FrontendApp". You will see similar data as for our host. But now it's a SERVICE and we use our SERVICE_TYPE tag to identify it
 3. Execute ./pushservicedeploy.sh
 4. Open the service details view for your FrontendApp service
 
@@ -243,7 +256,7 @@ In our tutorial we can assume that we have the following teams
 * an Operations Team responsible for all Infrastructure (=all Hosts)
 * a Business Team responsible for all applications
 
-Lets create Management Zones that will give each team access to the data they are supposed to see!
+Let's create Management Zones that will give each team access to the data they are supposed to see!
 
 **Step 1: Create Management Zone for Frontend & Backend**
 1. Go to Settings -> Preferences -> Management Zones
@@ -272,9 +285,9 @@ Create a Zone that covers all Web Applications
 
 ## Lab 7: Automatically query key metrics important for YOU!
 The Dynatrace REST API provides easy access to [Smartscape (=Topology Data)](https://www.dynatrace.com/support/help/dynatrace-api/topology-and-smartscape/what-does-the-topology-and-smartscape-api-provide/) as well as [Timeseries (=Performance Metrics)](https://www.dynatrace.com/support/help/dynatrace-api/timeseries/how-do-i-fetch-the-metrics-of-monitored-entities/). Basically everything we see in the Dynatrace UI can be queried and accessed via the API. This allows us to answer questions such as
-- Whats the response time of my backend-service?
+- What's the response time of my backend-service?
 - How many users access our application through the browser?
-- On how many PGIs does our fronent-app service run on?
+- On how many PGIs does our frontent-app service run on?
 - How many service dependencies does our frontend-app have?
 
 *Monitoring as Code*
@@ -296,13 +309,13 @@ The Dynatrace CLI implements a couple of use cases to pull, compare or even pull
 2. Pull the Performance Signature metrics in an automated way
 
 ## Lab 8: Run stack for second environment and validation automation
-Now as we have everything correctly setup and configured for our first environment lets do the same thing for a second enviornment like this
+Now as we have everything correctly setup and configured for our first environment, lets do the same thing for a second enviornment like this
 
 **Step 1: Create second enviornment, e.g: Staging**
 1. Create a new CF Stack based on the same CF Template
 2. Create a new stack based on the same CF Template and call it "DTMaaSLab8"
 3. Select YES to install OneAgent and Dynatrace CLI
-4. For "DynatraceCustomHostProperties" specify "Environment=Staging"
+4. For "Environment" choose "Staging"
 5. Lets create the stack and explore what we see in Dynatrace
 
 **Lab Lesson Learned**
@@ -325,7 +338,7 @@ Additionally to automated Real User Monitoring (RUM) where Dynatrace automatical
 7. Simulate another issue and validate notification works!
 
 **Lab Lesson Learned**
-1. Dynatrace can alert Business on Availabilty or Performance Issues with key business transactions
+1. Dynatrace can alert Business on Availability or Performance Issues with key business transactions
 
 ## Lab 11: Dashboarding
 Dynatrace provides rich dashboarding capabilities. As a last step we want to create default dashboards for development, business and operations.

@@ -7,3 +7,6 @@ bash ./build_docker.sh
 
 cd ../frontend-loadbalancer
 bash ./build_docker.sh
+
+cd ../jmeter-as-container
+bash ./build_docker.sh

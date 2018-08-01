@@ -1,5 +1,10 @@
 #!/bin/bash
 # will run 2 frontends with build 1
+
+if [ -f ../setenv.sh ]; then
+  source ../setenv.sh
+fi
+
 cd frontend-app
 bash run_docker.sh 2 8081 1
 

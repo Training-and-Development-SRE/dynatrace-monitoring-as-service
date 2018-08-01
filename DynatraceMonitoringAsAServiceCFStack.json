@@ -3,7 +3,7 @@
     "Description": "Dynatrace ACM Monitoring as a Service Workshop: https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service",
     "Parameters": {
         "TutorialGitHubLink" : {
-            "Description" : "The link to your cloned version of https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service.git",
+            "Description" : "The link to your forked version of https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service.git",
             "Type" : "String", 
             "Default" : "https://github.com/dynatrace-innovationlab/dynatrace-monitoring-as-service.git"
         },
@@ -52,15 +52,15 @@
             "AllowedPattern" : "https:\/\/.*",
             "Default": "https://<YOURTENENTID>.live.dynatrace.com/api/v1/deployment/XXXXXXXXXXXXXXXXXXXXXXXXX"
         },
-        "DynatraceCustomHostTags" : {
-            "Description": "Allows you to specify any number of tags that will be added to the hostautotag.conf file during installation, e.g: MyTag MyEnv=Staging",
+        "Environment" : {
+            "Description": "Name your environment, e.g: Development, Staging, Production ... -> this will be pushed to hostautotag.conf and hostcustomproperties.conf as well as an AWS Tag",
             "Type": "String",
-            "Default" : "Environment=Development DTMaaSHostTag CreatedBy=TeamDev1"
+            "Default" : "Development"
         },
-        "DynatraceCustomHostProperties" : {
-            "Description" : "Allows you to specify a custom property that will be added to the hostcustomproperties.conf during installation",
+        "ProductTeam" : {
+            "Description": "Whats the product team that owns this stack?, e.g: TeamDev1, TeamDev2, Team ... -> this will be pushed to hostautotag.conf and hostcustomproperties.conf as well as an AWS Tag",
             "Type": "String",
-            "Default" : "Environment=Development"
+            "Default" : "TeamDev1"
         },
         "KeyName": {
             "Description": "Name of Existing EC2 Key Pair which we will use to launch new EC2 Instances",
@@ -89,11 +89,11 @@
                 },
                 {
                     "Label": { "default": "Dynatrace"},
-                    "Parameters": [ "DynatraceTenantURL", "DynatraceAPIToken", "DynatraceOneAgentURL", "DynatraceCustomHostTags", "DynatraceCustomHostProperties" ]
+                    "ParamEnvironment": [ "DynatraceTenantURL", "DynatraceAPIToken", "DynatraceOneAgentURL"]
                 },
                 {
                     "Label": {"default": "Deployment"},
-                    "Parameters": ["InstanceType", "KeyName"]
+                    "Parameters": [ "Environment", "ProductTeam", "InstanceType", "KeyName"]
                 }
             ]
         }
@@ -292,6 +292,18 @@
                                 ]
                             ]
                         }
+                    },
+                    {
+                        "Key" : "Environment",
+                        "Value" : {
+                            "Ref" : "Environment"
+                        }
+                    },
+                    {
+                        "Key" : "ProductTeam",
+                        "Value" : {
+                            "Ref" : "ProductTeam"
+                        }
                     }
                 ],
                 "UserData": {
@@ -319,27 +331,35 @@
                                                     "echo 'Ready to install & configure tags for OneAgent:'\n",
                                                     "mkdir -p /var/lib/dynatrace/oneagent/agent/config\n",
                                                     "cd /var/lib/dynatrace/oneagent/agent/config\n",
-                                                    "echo \"StackName=",
+                                                    "echo \"DTMaaSHost StackName=",
                                                     {
                                                         "Ref" : "AWS::StackName"
                                                     },
-                                                    " ",
+                                                    " Environment=",
                                                     {
-                                                        "Ref" : "DynatraceCustomHostTags"
+                                                        "Ref" : "Environment"
                                                     },
                                                     "\" > hostautotag.conf\n",
                                                     "cd /\n",
-                                                    "sudo /bin/sh Dynatrace-OneAgent-Linux.sh APP_LOG_CONTENT_ACCESS=1\n",
-                                                    "cd /var/lib/dynatrace/oneagent/agent/config\n",
-                                                    "echo \"",
+                                                    "sudo /bin/sh Dynatrace-OneAgent-Linux.sh HOST_GROUP=",
                                                     {
-                                                        "Ref" : "DynatraceCustomHostProperties"
+                                                        "Ref" : "Environment"
+                                                    },
+                                                    " APP_LOG_CONTENT_ACCESS=1\n",
+                                                    "cd /var/lib/dynatrace/oneagent/agent/config\n",
+                                                    "echo \"Environment=",
+                                                    {
+                                                        "Ref" : "Environment"
+                                                    },
+                                                    " ProductTeam=",
+                                                    {
+                                                        "Ref" : "ProductTeam"
                                                     },
                                                     "\" > hostcustomproperties.conf\n",
                                                     "cd /home/ec2-user\n",
-                                                    "echo \"export ",
+                                                    "echo \"export Environment=",
                                                     {
-                                                        "Ref" : "DynatraceCustomHostProperties"
+                                                        "Ref" : "Environment"
                                                     },
                                                     "\" > setenv.sh\n",
                                                     "chmod +x setenv.sh\n",
