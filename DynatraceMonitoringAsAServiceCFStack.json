@@ -89,7 +89,7 @@
                 },
                 {
                     "Label": { "default": "Dynatrace"},
-                    "ParamEnvironment": [ "DynatraceTenantURL", "DynatraceAPIToken", "DynatraceOneAgentURL"]
+                    "Parameters": [ "DynatraceTenantURL", "DynatraceAPIToken", "DynatraceOneAgentURL"]
                 },
                 {
                     "Label": {"default": "Deployment"},
@@ -160,7 +160,6 @@
                     "Fn::Join" : [
                         "", 
                         [
-                            "ACM_MAAS_DT_EC2ProfileName_",
                             {
                                 "Ref": "AWS::StackName"
                             }
@@ -182,7 +181,6 @@
                     "Fn::Join" : [
                         "", 
                         [
-                            "ACM_MAAS_DT_EC2ProfileRoleName_",
                             {
                                 "Ref": "AWS::StackName"
                             }
@@ -229,7 +227,6 @@
                     "Fn::Join" : [
                         "", 
                         [
-                            "ACM_MAAS_DT_EC2SecrutiyGroupName_",
                             {
                                 "Ref": "AWS::StackName"
                             }
@@ -285,9 +282,12 @@
                             "Fn::Join" : [
                                 "", 
                                 [
-                                    "ACM_MAAS_DT_",
                                     {
                                         "Ref": "AWS::StackName"
+                                    },
+                                    "_",
+                                    {
+                                        "Ref" : "Environment"
                                     }
                                 ]
                             ]

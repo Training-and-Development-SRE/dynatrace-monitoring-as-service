@@ -23,4 +23,4 @@ done
 echo "}server {location / {proxy_pass http://my-frontend;}}" >> ${PWD}/conf.d/default.conf
 
 #!/bin/bash
-sudo docker run --name frontend-loadbalancer-nginx -v ${PWD}/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro -p 80:80 -d frontend-loadbalancer-nginx
+sudo docker run --name frontend-loadbalancer-nginx -v ${PWD}/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro -p 80:80 -e PROCESS_NAME=LOADBALANCER_$Environment -e DT_CUSTOM_PROP="SERVICE_TYPE=BACKEND ENVIRONMENT=$Environment" -d frontend-loadbalancer-nginx
