@@ -71,5 +71,26 @@
                 "validate" : "lower"
             }
         ]
+    },
+    "FrontendAppBuild1" : {
+        "etype" : "PROCESS_GROUP_INSTANCE",
+        "name" : "Frontend PGI - Build 1",
+        "owner" : "I am the owner",
+        "environments" : {
+            "Dev" : {
+                "tags" : [
+                    {
+                        "context" : "CONTEXTLESS",
+                        "key" : "SERVICE_TYPE",
+                        "value" : "FRONTEND"
+                    },
+                    {
+                        "context" : "CONTEXTLESS",
+                        "key" : "BUILD_NUMBER",
+                        "value" : "1"
+                    }
+                ]
+            }
+        }
     }
 }
