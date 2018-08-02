@@ -164,19 +164,17 @@ It depends on your environment but here are some ideas, e.g: Build Number, Versi
 
 **Step 1: Pass meta data via custom environment variables**
 1. Edit frontend-app/run_docker.sh
-2. Change the comments to use the launch process labeled **Step 1** (make sure the other lines are commented)
-3. Let's restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
+2. Learn how $1 impacts the launch options for docker. How it uses DT_TAGS, DT_CUSTOM_PROP when passing 1
+3. Let's restart our app via ../stop_frontend_clustered.sh and then "../run_frontend2builds_clustered.sh 1"
 
-Looking at our Process Groups now shows us the additional Meta Data and the Automated Tags!
+The last parameter we pass to "run_frontend2builds_clustered.sh 1" will instruct frontend-app/run_docker to pass DT_TAGS & DT_CUSTOM_PROP. Let's have a look at your process groups in Dynatrace - we will see the additional meta data and tags showing up:
 
 ![](./images/lab3_processgroup_wtag_metadata.jpg)
 
 **Step 2: Influence PGI Detection to detect each Build as separate PGI**
-1. Edit frontend-app/run_docker.sh
-2. Change the comments to use the launch process labeled **Step 2** (make sure the other lines are commented)
-3. Let's restart our app via ../stop_frontend_clustered.sh and then ../run_frontend2builds_clustered.sh
+1. Let's restart our app via ../stop_frontend_clustered.sh and then "../run_frontend2builds_clustered.sh 2"
 
-The difference with this launch process is that we pass the BUILD_NUMBER as DT_NODE_ID. This changes the default Process Group Instance detection mechanism and every docker instance, even if it comes from the same docker image, will be split into its own PGI.
+In this case the last parameter we pass to "run_frontend2builds_clustered.sh 2" will instruct frontend-app/run_docker to additionally add DT_NODE_ID by passing the BUILD_NUMBER to it. This changes the default Process Group Instance detection mechanism and every docker instance, even if it comes from the same docker image, will be split into its own PGI.
 **Note: Kubernetes, OpenShift, CloudFoundry, ...:** For these platforms the OneAgent automatically detects containers running in different pods, spaces or projects. There should be no need to leverage DT_NODE_ID to separate your container instances.
 
 ![](./images/lab3_pgis_per_build.jpg)
@@ -228,7 +226,7 @@ The Dynatrace CLI also implements a dtcli evt push option as well as an option t
 **Step 1: Push host deployment information**
 1. cat ./monspec/monspec.json
 2. Explore the entry "MaaSHost". You will see that it contains sub elements that define how to detect that host in Dynatrace in our Lab2
-3. Execute ./pushhostdeploy.sh
+3. Execute ./pushdeploy.sh MaaSHost/Lab2
 4. Open the host details view in Dynatrace and check the events view
 
 ![](./images/pushhostevent.jpg)
@@ -238,7 +236,7 @@ The Dynatrace CLI also implements a dtcli evt push option as well as an option t
 **Step 2: Push service deployment information**
 1. cat ./monspec/monspec.json
 2. Explore the entry "FrontendApp". You will see similar data as for our host. But now it's a SERVICE and we use our SERVICE_TYPE tag to identify it
-3. Execute ./pushservicedeploy.sh
+3. Execute ./pushdeploy.sh FrontendApp/Dev
 4. Open the service details view for your FrontendApp service
 
 ![](./images/pushserviceevent.jpg)
