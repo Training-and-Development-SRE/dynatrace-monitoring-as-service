@@ -8,6 +8,10 @@ In order to achieve that goal we will learn how to
 * Pass additional meta data to your hosts and processes via hostautotag.conf, DT_TAGS, DT_CUSTOM_PROP ...
 * Ensure proper PG (process group), PGI (process group instance) and service detection via detection rules
 * Push additional deployment & configuration change event details to Dynatrace to enrich the AI's data set
+* Pull important metrics through automation mechanisms such as the Dynatrace REST API
+* Create Management Zones to make data easily available for the different groups: dev, test, operations, business
+* Integrate Dynatrace with your ChatOps tools to improve collaboration in case of problems
+* Setup availabilty monitoring using Dynatrace Synthetic 
 
 ## Introduction to our tutorial app & services
 This tutorial comes with an AWS CloudFormation template that will create an EC2 Linux instance but comes with a set of options to simulate different "stages" of our "Monitoring as a Service" maturity level:
