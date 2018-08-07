@@ -74,7 +74,7 @@ Before launching frontend, backend or frontend-loadbalancer have a look at the r
 
 **Summary: What we have!**
 We have a distributed application that we can access. 
-As for  monitoring: The only level of monitoring you have in the moment is through the Dynatrace AWS CloudWatch integration which gives you basic infrastructure metrics for your EC2 instance!
+As for monitoring: The only level of monitoring you have in the moment is through the Dynatrace AWS CloudWatch integration which gives you basic infrastructure metrics for your EC2 instance!
 
 ## Lab 2: Enable FullStack Monitoring through OneAgent rollout
 In this lab we learn how to automate the installation of the Dynatrace OneAgent, how to pass in additional meta data about the host and how OneAgent automatically monitors all our processes, containers, services, applications and end-users!
@@ -183,6 +183,13 @@ In this case the last parameter we pass to "run_frontend2builds_clustered.sh 2" 
 
 ![](./images/lab3_pgis_per_build.jpg)
 
+**Step 3: Influence PGI Detection through Process Group Detection Rules**
+1. Let's stop our app via ../stop_frontend_clustered.sh
+2. Now lets define a Process Group detection rule that accomplishes the same as in Step 2. This time though we define a rule that detects the Process Group based on the BUILD_NUMBER environment meta data
+3. Restart the app via "../run_frontend2builds_clustered.sh 1"
+
+For more information check out [Customize Process Group Detection](https://www.dynatrace.com/support/help/infrastructure/processes/can-i-customize-how-process-groups-are-detected/)
+
 **Lab Lesson Learned**
 1. How to pass additional meta data to a process group
 2. How to influence process group and process group instance detection
@@ -215,7 +222,7 @@ It will take about 30s until the tags are automatically applied to the services.
 ![](./images/lab4_serviceview_with_servicetypetag.jpg)
 
 **Step 3: Create Tagging Rule for Environment**
-Define a Service-level tagging rule for a tag called "Environment".  Extract the Tag Value from the Process Group's Environment value "Enviornment". Make sure to only apply this rule if ProcessGroup:Environment exists!
+Define a Service-level tagging rule for a tag called "Environment".  Extract the Tag Value from the Process Group's Environment value "Enviornment" or from the Hosts "Enviornment" value.  Make sure to only apply this rule if ProcessGroup:Environment or Host:Environment exists!
 
 **Lab Lesson Learned**
 1. Create automated tagging rules to apply tags to services
@@ -272,13 +279,16 @@ Let's create Management Zones that will give each team access to the data they a
 **Step 2: Create Management Zone for Dev Team**
 Create a Zone that shows ALL entities that are tagged with Environment=Development
 
-**Step 3: Create Management Zone for Architect Team**
+**Step 3: Create Management Zone for Staging Team**
+Create a Zone that shows ALL entities that are tagged with Environment=Staging
+
+**Step 4: Create Management Zone for Architect Team**
 Create a Zone that shows ALL entities that are tagged with Environment=Development or Environment=Staging
 
-**Step 4: Create Management Zone for Operations**
+**Step 5: Create Management Zone for Operations**
 Create a Zone for all HOSTS & Processes.
 
-**Step 5: Create Management Zone for Business**
+**Step 6: Create Management Zone for Business**
 Create a Zone that covers all Web Applications
 
 **Lab Lesson Learned**
@@ -344,3 +354,6 @@ Additionally to automated Real User Monitoring (RUM) where Dynatrace automatical
 
 ## Lab 11: Dashboarding
 Dynatrace provides rich dashboarding capabilities. As a last step we want to create default dashboards for development, business and operations.
+
+## Lab 12: Configure UEM Rum Tagging
+The sample application provides a login capability where a username can be passed. Configure User Tagging in a way that this username is used to tag Dynatrace RUM Visits. For more information please visit [How do I tag individual users for session analysis](https://www.dynatrace.com/support/help/user-experience/analytics/how-do-i-tag-individual-users-for-session-analysis/)
