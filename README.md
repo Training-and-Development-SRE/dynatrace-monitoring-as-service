@@ -92,7 +92,7 @@ We also learn about tagging and how to organize your entities. We highly recomme
 
 **Step 4: Execute some load**
 We have a JMeter script ready that executes constant load against the app. Here are the steps to kick it off:
-1. cd jmeter-as-container
+1. cd dynatrace-monitoring-as-service/jmeter-as-container
 2. ./quicklaunch.sh <YOURPUBLICDNS>, e.g: ./quicklaunch.sh ec2-11-222-33-44.compute-1.amazonaws.com
 
 This executes the script scripts/SampleNodeJsServiceTest.jmx. It simulates 10 concurrent users and the test will run until you call "./stop_test.sh". Once stopped you get the JMeter Result Dashboard in the local results.zip!
